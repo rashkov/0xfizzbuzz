@@ -6,12 +6,14 @@ fizz_format:
  .ascii "fizz\n\0"
 buzz_format:
  .ascii "buzz\n\0"
+fizzbuzz_format:
+ .ascii "fizzbuzz\n\0"
  .section .text
  .globl _start
 
 _start:
  movl $0, %eax
- movl $10, %ebx
+ movl $15, %ebx
 
 _loop:
  incl %eax
@@ -25,16 +27,52 @@ _loop:
 
  pushl %eax # save number
  call _check_mod_5
+ shll $1, %ecx # left shift to make room for new return val
  orl %eax, %ecx # OR return val w/ previous one
  popl %eax # restore number
 
- # Print number if neither modulo's were true
+ ## Print number if neither modulo's were true
+ #cmpl $0, %ecx
+ #jne _modulo_true
+ #pushl %eax
+ ##call _print_number
+ #popl %eax
+ #_modulo_true:
+
+ # ecx has four values:
+ #  0: neither 3 nor 5
+ #  1: only 5
+ #  2: only 3
+ #  3: both 3 and 5
  cmpl $0, %ecx
- jne _modulo_true
+ jne _not_zero
  pushl %eax
  call _print_number
  popl %eax
- _modulo_true:
+ jmp _done_compare
+ _not_zero:
+  cmpl $1, %ecx
+  jne _not_one
+  pushl %eax
+  call _print_buzz
+  popl %eax
+  jmp _done_compare
+  _not_one:
+   cmpl $2, %ecx
+   jne _not_two
+   pushl %eax
+   call _print_fizz
+   popl %eax
+   jmp _done_compare
+   _not_two:
+    cmpl $3, %ecx
+    jne _not_three
+    pushl %eax
+    call _print_fizzbuzz
+    popl %eax
+    jmp _done_compare
+    _not_three: # Error
+ _done_compare:
 
  popl %ebx 
  popl %eax
@@ -46,6 +84,22 @@ _loop:
  pushl $0
  call exit
 
+_print_fizzbuzz:
+ pushl %ebp
+ movl %esp, %ebp
+
+ # push printf params
+ pushl $fizzbuzz_format
+ call printf
+ # Clean up printf params
+ addl $0x4, %esp 
+ # Set return vale
+ movl $0, %eax
+
+ movl %ebp, %esp
+ popl %ebp
+ ret
+
 _print_fizz:
  pushl %ebp
  movl %esp, %ebp
@@ -54,7 +108,7 @@ _print_fizz:
  pushl $fizz_format
  call printf
  # Clean up printf params
- addl $0x4, %esp 
+ addl $0x4, %esp
  # Set return vale
  movl $0, %eax
 
@@ -70,7 +124,7 @@ _print_buzz:
  pushl $buzz_format
  call printf
  # Clean up printf params
- addl $0x4, %esp 
+ addl $0x4, %esp
  # Set return vale
  movl $0, %eax
 
@@ -138,7 +192,7 @@ _check_mod_3:
  addl $0x4, %esp # cleanup from call to _modulo
 
  movl $1, -4(%ebp)
- call _print_fizz
+ #call _print_fizz
  movl 4(%esp), %eax # restore number
  jmp _done_check_mod_3
 
@@ -174,7 +228,7 @@ _check_mod_5:
  addl $0x4, %esp # cleanup from call to _modulo
 
  movl $1, -4(%ebp)
- call _print_buzz
+ #call _print_buzz
  movl 4(%esp), %eax # restore number
  jmp _done_check_mod_5
 
