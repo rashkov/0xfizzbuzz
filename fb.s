@@ -2,6 +2,8 @@
 
 number_format:
  .ascii "%d\n\0"
+fizz_format:
+ .ascii "fizz\n\0"
  .section .text
  .globl _start
 
@@ -15,18 +17,51 @@ _loop:
  pushl %ebx
 
  # Check mod 3
+_check_mod_3:
  pushl $3
  pushl %eax
  call _modulo
  cmpl $0, %eax
- popl %eax # restore the number
  jne _not_mod_3
- # print the number
+ popl %eax # cleanup from call to _modulo
+ addl $0x4, %esp # cleanup from call to _modulo
+
+ call _print_fizz
+ movl 4(%esp), %eax # restore number
+ jmp _done_check_mod_3
+
+_not_mod_3:
+ popl %eax # cleanup from call to _modulo
+ addl $0x4, %esp # cleanup from call to _modulo
  pushl %eax
  call _print_number
- addl $0x4, %esp
-_not_mod_3:
- addl $0x4, %esp
+ popl %eax
+_done_check_mod_3:
+
+# cmpl $0, %eax
+# popl %eax # restore the number
+# addl $0x4, %esp
+# jne _not_mod_3
+# # print "fizz"
+# pushl %eax
+# call _print_number
+# addl $0x4, %esp
+#_not_mod_3:
+# addl $0x4, %esp
+
+## Check mod 5
+#pushl $5
+#pushl %eax
+#call _modulo
+#cmpl $0, %eax
+#popl %eax # restore the number
+#jne _not_mod_5
+## print the number
+#pushl %eax
+#call _print_number
+#addl $0x4, %esp
+#not_mod_5:
+#addl $0x4, %esp
 
 
  popl %ebx 
@@ -38,6 +73,22 @@ _not_mod_3:
  # exit
  pushl $0
  call exit
+
+_print_fizz:
+ pushl %ebp
+ movl %esp, %ebp
+
+ # push printf params
+ pushl $fizz_format
+ call printf
+ # Clean up printf params
+ addl $0x4, %esp 
+ # Set return vale
+ movl $0, %eax
+
+ movl %ebp, %esp
+ popl %ebp
+ ret
 
 # Param 1: the number to print
 _print_number:
