@@ -4,6 +4,8 @@ number_format:
  .ascii "%d\n\0"
 fizz_format:
  .ascii "fizz\n\0"
+buzz_format:
+ .ascii "buzz\n\0"
  .section .text
  .globl _start
 
@@ -16,53 +18,23 @@ _loop:
  pushl %eax
  pushl %ebx
 
- # Check mod 3
-_check_mod_3:
- pushl $3
- pushl %eax
- call _modulo
- cmpl $0, %eax
- jne _not_mod_3
- popl %eax # cleanup from call to _modulo
- addl $0x4, %esp # cleanup from call to _modulo
+ pushl %eax # save number
+ call _check_mod_3
+ movl %eax, %ecx # save return value
+ popl %eax # restore number
 
- call _print_fizz
- movl 4(%esp), %eax # restore number
- jmp _done_check_mod_3
+ pushl %eax # save number
+ call _check_mod_5
+ orl %eax, %ecx # OR return val w/ previous one
+ popl %eax # restore number
 
-_not_mod_3:
- popl %eax # cleanup from call to _modulo
- addl $0x4, %esp # cleanup from call to _modulo
+ # Print number if neither modulo's were true
+ cmpl $0, %ecx
+ jne _modulo_true
  pushl %eax
  call _print_number
  popl %eax
-_done_check_mod_3:
-
-# cmpl $0, %eax
-# popl %eax # restore the number
-# addl $0x4, %esp
-# jne _not_mod_3
-# # print "fizz"
-# pushl %eax
-# call _print_number
-# addl $0x4, %esp
-#_not_mod_3:
-# addl $0x4, %esp
-
-## Check mod 5
-#pushl $5
-#pushl %eax
-#call _modulo
-#cmpl $0, %eax
-#popl %eax # restore the number
-#jne _not_mod_5
-## print the number
-#pushl %eax
-#call _print_number
-#addl $0x4, %esp
-#not_mod_5:
-#addl $0x4, %esp
-
+ _modulo_true:
 
  popl %ebx 
  popl %eax
@@ -80,6 +52,22 @@ _print_fizz:
 
  # push printf params
  pushl $fizz_format
+ call printf
+ # Clean up printf params
+ addl $0x4, %esp 
+ # Set return vale
+ movl $0, %eax
+
+ movl %ebp, %esp
+ popl %ebp
+ ret
+
+_print_buzz:
+ pushl %ebp
+ movl %esp, %ebp
+
+ # push printf params
+ pushl $buzz_format
  call printf
  # Clean up printf params
  addl $0x4, %esp 
@@ -129,3 +117,75 @@ _modulo:
  movl %ebp, %esp
  popl %ebp
  ret
+
+# Check mod 3
+# Param 1: the number to check
+_check_mod_3:
+ pushl %ebp
+ movl %esp, %ebp
+ # Grab param
+ movl 8(%ebp), %eax
+
+ # initialize our return value
+ pushl $0 # -4(%ebp)
+
+ pushl $3
+ pushl %eax
+ call _modulo
+ cmpl $0, %eax
+ jne _not_mod_3
+ popl %eax # cleanup from call to _modulo
+ addl $0x4, %esp # cleanup from call to _modulo
+
+ movl $1, -4(%ebp)
+ call _print_fizz
+ movl 4(%esp), %eax # restore number
+ jmp _done_check_mod_3
+
+ _not_mod_3:
+  popl %eax # cleanup from call to _modulo
+  addl $0x4, %esp # cleanup from call to _modulo
+ 
+ _done_check_mod_3:
+  # set the return value
+  movl -4(%ebp), %eax
+ 
+  movl %ebp, %esp
+  popl %ebp
+  ret
+
+# Check mod 5
+# Param 1: the number to check
+_check_mod_5:
+ pushl %ebp
+ movl %esp, %ebp
+ # Grab param
+ movl 8(%ebp), %eax
+
+ # initialize our return value
+ pushl $0 # -4(%ebp)
+
+ pushl $5
+ pushl %eax
+ call _modulo
+ cmpl $0, %eax
+ jne _not_mod_5
+ popl %eax # cleanup from call to _modulo
+ addl $0x4, %esp # cleanup from call to _modulo
+
+ movl $1, -4(%ebp)
+ call _print_buzz
+ movl 4(%esp), %eax # restore number
+ jmp _done_check_mod_5
+
+ _not_mod_5:
+  popl %eax # cleanup from call to _modulo
+  addl $0x4, %esp # cleanup from call to _modulo
+ 
+ _done_check_mod_5:
+  # set the return value
+  movl -4(%ebp), %eax
+ 
+  movl %ebp, %esp
+  popl %ebp
+  ret
