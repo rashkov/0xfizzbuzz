@@ -13,7 +13,7 @@ fizzbuzz_format:
 
 _start:
  movl $0, %eax
- movl $15, %ebx
+ movl $100, %ebx
 
 _loop:
  incl %eax
