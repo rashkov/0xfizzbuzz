@@ -5,4 +5,4 @@ Released in October of 1985, this architecture was the original 32-bit extension
 This processor never goes out of style so let's support it with a timeless fizzbuzz application running on bare metal.
 
 
-```Not compatible with 64-bit computers, this should be run in a 32-bit virtual machine or container. A simple "make" command will compile and run this program.```
+```Not compatible with 64-bit computers, this should be run in a 32-bit Linux virtual machine or container. Depends on glibc and linux. A simple "make" command will compile and run this program.```
